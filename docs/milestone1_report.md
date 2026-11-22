@@ -1,7 +1,7 @@
 # Phase 1 - Milestone 1 Report
 **Sales & Demand Intelligence data mart: generator to query layer**
 
-Course: Intelligent Data Architectures, Fall 2026 · Group: _<group name / members>_ · Date: _<submission date>_
+Course: Intelligent Data Architectures, Fall 2026 · Group Members: Fahad Samad & Rafay Zafar · Date: 22 Nov 2026
 
 ---
 
