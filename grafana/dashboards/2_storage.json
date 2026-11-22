@@ -1,0 +1,942 @@
+{
+ "uid": "p1-storage",
+ "title": "2 - Storage and Staging Monitor",
+ "description": "Storage layer: row counts, footprint, date coverage.",
+ "tags": [
+  "pharma-phase1",
+  "storage"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 2,
+ "refresh": "5s",
+ "time": {
+  "from": "now-7d",
+  "to": "now"
+ },
+ "style": "dark",
+ "editable": true,
+ "graphTooltip": 1,
+ "panels": [
+  {
+   "id": 1,
+   "type": "text",
+   "title": "",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 2
+   },
+   "options": {
+    "mode": "markdown",
+    "content": "**How to read:** tiles show the latest value with its trend; colours follow thresholds (green = healthy, orange = watch, red = act). Hover the (i) icon on a tile for its definition. Spec metrics: **Table Row Count** (`SELECT COUNT(*)`), **Storage Footprint MB** (`pg_total_relation_size` / `os.path.getsize`), **Date Coverage Span** (distinct year-months vs expected). Snapshots are taken after every transform."
+   },
+   "transparent": true
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Staging rows",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, SUM(row_count) AS rows FROM ops.storage_snapshot WHERE layer = 'staging' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#5794F2",
+        "value": null
+       }
+      ]
+     },
+     "unit": "short"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Warehouse rows",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, SUM(row_count) AS rows FROM ops.storage_snapshot WHERE layer = 'dwh' AND table_name NOT LIKE 'agg_%' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       }
+      ]
+     },
+     "unit": "short"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Postgres size",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, SUM(size_mb) AS mb FROM ops.storage_snapshot WHERE layer = 'postgres_db' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#B877D9",
+        "value": null
+       }
+      ]
+     },
+     "unit": "decmbytes",
+     "decimals": 1
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "DuckDB size",
+   "description": "os.path.getsize() of the DuckDB file",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, SUM(size_mb) AS mb FROM ops.storage_snapshot WHERE layer = 'duckdb_file' AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#4ECDC4",
+        "value": null
+       }
+      ]
+     },
+     "unit": "decmbytes",
+     "decimals": 1
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Date coverage",
+   "description": "distinct year-months present / months expected from 2023-01",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, MIN(coverage_pct) AS pct FROM ops.date_coverage WHERE $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#F2495C",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 90
+       },
+       {
+        "color": "#73BF69",
+        "value": 99
+       }
+      ]
+     },
+     "unit": "percent"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 7,
+   "type": "stat",
+   "title": "Domains staged",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, COUNT(DISTINCT source_domain) AS domains FROM ops.storage_snapshot WHERE layer = 'staging' AND row_count > 0 AND $__timeFilter(captured_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#5794F2",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 8,
+   "type": "row",
+   "title": "Footprint by source domain",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 7,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 9,
+   "type": "piechart",
+   "title": "Storage breakdown: rows",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT source_domain, row_count FROM ops.storage_snapshot WHERE layer = 'staging' AND captured_at = (SELECT MAX(captured_at) FROM ops.storage_snapshot)"
+    }
+   ],
+   "options": {
+    "pieType": "donut",
+    "displayLabels": [
+     "percent"
+    ],
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true,
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "tooltip": {
+     "mode": "single"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 10,
+   "type": "piechart",
+   "title": "Storage breakdown: MB",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 8,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT source_domain, size_mb FROM ops.storage_snapshot WHERE layer = 'staging' AND captured_at = (SELECT MAX(captured_at) FROM ops.storage_snapshot)"
+    }
+   ],
+   "options": {
+    "pieType": "donut",
+    "displayLabels": [
+     "percent"
+    ],
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true,
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "tooltip": {
+     "mode": "single"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "decmbytes"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 11,
+   "type": "bargauge",
+   "title": "Warehouse table row counts (DuckDB)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 8,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT table_name, row_count FROM ops.storage_snapshot WHERE layer = 'dwh' AND captured_at = (SELECT MAX(captured_at) FROM ops.storage_snapshot) ORDER BY row_count DESC"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "valueMode": "color",
+    "showUnfilled": true,
+    "minVizHeight": 12,
+    "minVizWidth": 8,
+    "namePlacement": "top",
+    "sizing": "auto",
+    "text": {
+     "titleSize": 12,
+     "valueSize": 16
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#5794F2",
+        "value": null
+       }
+      ]
+     },
+     "min": 0
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 12,
+   "type": "row",
+   "title": "Growth after each refresh",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 13,
+   "type": "timeseries",
+   "title": "Cumulative rows by layer",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 18,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, layer AS metric, SUM(row_count) AS rows FROM ops.storage_snapshot WHERE layer IN ('staging', 'dwh') AND table_name NOT LIKE 'agg_%' AND $__timeFilter(captured_at) GROUP BY 1, 2 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "fillOpacity": 30,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "staging"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#5794F2"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "dwh"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#73BF69"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 14,
+   "type": "timeseries",
+   "title": "Staging rows by source domain (stacked)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 18,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT captured_at AS time, source_domain AS metric, SUM(row_count) AS rows FROM ops.storage_snapshot WHERE layer = 'staging' AND $__timeFilter(captured_at) GROUP BY 1, 2 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "fillOpacity": 30,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 15,
+   "type": "row",
+   "title": "Date coverage and insights",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 26,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 16,
+   "type": "table",
+   "title": "Date coverage span",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 27,
+    "w": 16,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT domain, table_name, to_char(min_date, 'YYYY-MM-DD') AS min_date, to_char(max_date, 'YYYY-MM-DD') AS max_date, distinct_months, expected_months, coverage_pct FROM ops.date_coverage WHERE captured_at = (SELECT MAX(captured_at) FROM ops.date_coverage)"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "coverage_pct"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "gradient"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "#F2495C",
+           "value": null
+          },
+          {
+           "color": "#FF9830",
+           "value": 90
+          },
+          {
+           "color": "#73BF69",
+           "value": 99
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 17,
+   "type": "table",
+   "title": "Insights",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 27,
+    "w": 8,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT 'Largest staging domain' AS insight, source_domain || ' - ' || row_count || ' rows' AS detail FROM (SELECT * FROM ops.storage_snapshot WHERE layer = 'staging' AND captured_at = (SELECT MAX(captured_at) FROM ops.storage_snapshot) ORDER BY row_count DESC LIMIT 1) a\n             UNION ALL SELECT 'Largest warehouse table', table_name || ' - ' || row_count || ' rows' FROM (SELECT * FROM ops.storage_snapshot WHERE layer = 'dwh' AND captured_at = (SELECT MAX(captured_at) FROM ops.storage_snapshot) ORDER BY row_count DESC LIMIT 1) b\n             UNION ALL SELECT 'Latest snapshot', to_char(MAX(captured_at), 'YYYY-MM-DD HH24:MI') FROM ops.storage_snapshot\n             UNION ALL SELECT 'Snapshots taken', COUNT(DISTINCT captured_at)::text FROM ops.storage_snapshot"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": []
+   }
+  }
+ ],
+ "templating": {
+  "list": []
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [
+  {
+   "type": "dashboards",
+   "tags": [
+    "pharma-phase1"
+   ],
+   "asDropdown": false,
+   "includeVars": false,
+   "keepTime": true,
+   "title": "Observability dashboards",
+   "icon": "dashboard",
+   "targetBlank": false
+  }
+ ]
+}

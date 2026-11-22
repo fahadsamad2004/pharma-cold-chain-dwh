@@ -1,0 +1,71 @@
+{
+  "run_id": "test2",
+  "generated_at": "2026-11-22 09:04:51",
+  "files": [
+    {
+      "file": "01_master_data_refresh2_2026-02.xlsx",
+      "domain": "master",
+      "rows": 4,
+      "period_start": "2026-02-01",
+      "period_end": "2026-02-28",
+      "details": {
+        "changed_medicines": [
+          "MED021",
+          "MED022",
+          "MED024",
+          "MED040"
+        ],
+        "new_wholesale": [
+          15.97,
+          22.97,
+          6.24,
+          3.75
+        ],
+        "note": "price/cost change rows -> new SCD2 versions in dim_medicine"
+      }
+    },
+    {
+      "file": "05_pharmacy_sales_data_refresh2_2026-02.xlsx",
+      "domain": "sales",
+      "rows": 15064,
+      "period_start": "2026-02-01",
+      "period_end": "2026-02-28",
+      "details": {
+        "projected_annual_rows": 196364,
+        "yoy_growth_used": 0.0909,
+        "template_pool_rows": 59209,
+        "channel_mix": {
+          "Physical Pharmacy": 12442,
+          "Ecommerce": 2622
+        },
+        "pharmacy_type_mix": {
+          "Chain Pharmacy": 6553,
+          "Independent Pharmacy": 5178,
+          "Hospital Pharmacy": 3333
+        },
+        "net_sales_usd": 190176.51,
+        "gross_margin_usd": 44446.87,
+        "return_rate_pct": 1.28,
+        "rows_on_repriced_medicines": 678,
+        "first_id": "SALE-000516678",
+        "last_id": "SALE-000531741"
+      }
+    },
+    {
+      "file": "06_hospital_demand_data_refresh2_2026-02.xlsx",
+      "domain": "hospital_demand",
+      "rows": 756,
+      "period_start": "2026-02-01",
+      "period_end": "2026-02-01",
+      "details": {
+        "hospitals": 12,
+        "medicines": 63,
+        "forecast_packs": 175258,
+        "consumed_packs": 178682,
+        "unfulfilled_packs": 286,
+        "rows_with_stockout": 10,
+        "opening_stock_chained_from": "2026-01-01"
+      }
+    }
+  ]
+}

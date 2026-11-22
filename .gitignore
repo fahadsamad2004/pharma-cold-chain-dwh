@@ -1,0 +1,13 @@
+# Big files: the 218 MB sales CSV is above GitHub's 100 MB limit. Use Git LFS or keep out of git.
+data/raw/*.csv
+data/landing/*
+data/archive/*
+data/rejected/*
+data/tmp/*
+data/generated/*
+warehouse/*
+!**/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+logs/

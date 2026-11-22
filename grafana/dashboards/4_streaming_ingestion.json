@@ -1,0 +1,1031 @@
+{
+ "uid": "p1-stream",
+ "title": "4 - Streaming Ingestion Monitor",
+ "description": "Streaming ingestion: throughput, end-to-end latency, malformed records.",
+ "tags": [
+  "pharma-phase1",
+  "streaming"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 2,
+ "refresh": "5s",
+ "time": {
+  "from": "now-7d",
+  "to": "now"
+ },
+ "style": "dark",
+ "editable": true,
+ "graphTooltip": 1,
+ "panels": [
+  {
+   "id": 1,
+   "type": "text",
+   "title": "",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 2
+   },
+   "options": {
+    "mode": "markdown",
+    "content": "**How to read:** tiles show the latest value with its trend; colours follow thresholds (green = healthy, orange = watch, red = act). Hover the (i) icon on a tile for its definition. Spec metrics: **Stream Throughput** (events/sec), **End-to-End Latency** (DB insert time - event time), **Malformed / Dropped Records** (validation failures). Run a window with `make stream`."
+   },
+   "transparent": true
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Throughput",
+   "description": "records ingested per second (latest tick)",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, throughput_eps AS \"events/s\" FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#FF9830",
+        "value": null
+       },
+       {
+        "color": "#73BF69",
+        "value": 10
+       }
+      ]
+     },
+     "unit": "short",
+     "decimals": 1
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Events ingested",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, SUM(events_ok) OVER (ORDER BY ts) AS events FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Avg latency",
+   "description": "DB insert timestamp - source event timestamp",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, ROUND(avg_latency_sec, 2) AS seconds FROM ops.stream_metrics WHERE avg_latency_sec IS NOT NULL AND $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 3
+       },
+       {
+        "color": "#F2495C",
+        "value": 10
+       }
+      ]
+     },
+     "unit": "s"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Max latency",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, ROUND(max_latency_sec, 2) AS seconds FROM ops.stream_metrics WHERE max_latency_sec IS NOT NULL AND $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 5
+       },
+       {
+        "color": "#F2495C",
+        "value": 15
+       }
+      ]
+     },
+     "unit": "s"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Dropped records",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, SUM(events_bad) OVER (ORDER BY ts) AS dropped FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 1
+       },
+       {
+        "color": "#F2495C",
+        "value": 500
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 7,
+   "type": "stat",
+   "title": "Malformed rate",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, ROUND(100.0 * SUM(events_bad) OVER (ORDER BY ts) / NULLIF(SUM(events_in) OVER (ORDER BY ts), 0), 2) AS \"malformed %\" FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 1
+       },
+       {
+        "color": "#F2495C",
+        "value": 5
+       }
+      ]
+     },
+     "unit": "percent"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 8,
+   "type": "row",
+   "title": "Throughput and latency",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 7,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 9,
+   "type": "timeseries",
+   "title": "Stream throughput (events per second)",
+   "description": "Line chart over the simulation run: pipeline stability.",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, throughput_eps AS \"events/sec\" FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "fillOpacity": 30,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "events/sec"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#4ECDC4"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "End-to-end latency: average and maximum (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, avg_latency_sec AS \"avg latency\", max_latency_sec AS \"max latency\" FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "fillOpacity": 30,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     },
+     "unit": "s"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "avg latency"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#5794F2"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "max latency"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#FF9830"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 11,
+   "type": "row",
+   "title": "Data quality of the stream",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "Accepted vs malformed events per tick",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 18,
+    "w": 10,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT ts AS time, events_ok AS accepted, events_bad AS malformed FROM ops.stream_metrics WHERE $__timeFilter(ts) ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 2,
+      "fillOpacity": 80,
+      "gradientMode": "opacity",
+      "lineInterpolation": "linear",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "accepted"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#73BF69"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "malformed"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#F2495C"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 13,
+   "type": "bargauge",
+   "title": "Malformed record reasons",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 10,
+    "y": 18,
+    "w": 8,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT left(reason, 55) AS reason, COUNT(*) AS rows FROM stg.rejected_rows WHERE load_id LIKE 'stream_%' GROUP BY 1 ORDER BY 2 DESC LIMIT 8"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "valueMode": "color",
+    "showUnfilled": true,
+    "minVizHeight": 12,
+    "minVizWidth": 8,
+    "namePlacement": "top",
+    "sizing": "auto",
+    "text": {
+     "titleSize": 12,
+     "valueSize": 16
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#FF9830",
+        "value": null
+       },
+       {
+        "color": "#F2495C",
+        "value": 50
+       }
+      ]
+     },
+     "min": 0
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 14,
+   "type": "piechart",
+   "title": "Accepted vs dropped (all windows)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 18,
+    "w": 6,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT 'accepted' AS outcome, COALESCE(SUM(total_ok), 0) AS events FROM ops.stream_run_log UNION ALL SELECT 'dropped', COALESCE(SUM(total_bad), 0) FROM ops.stream_run_log"
+    }
+   ],
+   "options": {
+    "pieType": "donut",
+    "displayLabels": [
+     "percent"
+    ],
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true,
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "tooltip": {
+     "mode": "single"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 15,
+   "type": "row",
+   "title": "Stream windows and insights",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 26,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 16,
+   "type": "table",
+   "title": "Stream windows",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 27,
+    "w": 16,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at, window_id, duration_sec, total_in, total_ok, total_bad, avg_throughput_eps, status FROM ops.stream_run_log ORDER BY started_at DESC LIMIT 10"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "status"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "success": {
+            "color": "#73BF69",
+            "text": "success"
+           },
+           "failed": {
+            "color": "#F2495C",
+            "text": "failed"
+           },
+           "true": {
+            "color": "#73BF69",
+            "text": "true"
+           },
+           "false": {
+            "color": "#F2495C",
+            "text": "false"
+           },
+           "dag_task_failed": {
+            "color": "#F2495C",
+            "text": "dag_task_failed"
+           },
+           "Pass": {
+            "color": "#73BF69",
+            "text": "Pass"
+           },
+           "FAIL": {
+            "color": "#F2495C",
+            "text": "FAIL"
+           }
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 17,
+   "type": "table",
+   "title": "Insights",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 27,
+    "w": 8,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT 'Windows run' AS insight, COUNT(*)::text AS detail FROM ops.stream_run_log\n             UNION ALL SELECT 'Peak throughput', ROUND(MAX(throughput_eps), 1) || ' events/s' FROM ops.stream_metrics\n             UNION ALL SELECT 'Worst latency', ROUND(MAX(max_latency_sec), 2) || ' s' FROM ops.stream_metrics\n             UNION ALL SELECT 'Overall malformed rate', ROUND(100.0 * SUM(total_bad) / NULLIF(SUM(total_in), 0), 2) || ' %' FROM ops.stream_run_log"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": []
+   }
+  }
+ ],
+ "templating": {
+  "list": []
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [
+  {
+   "type": "dashboards",
+   "tags": [
+    "pharma-phase1"
+   ],
+   "asDropdown": false,
+   "includeVars": false,
+   "keepTime": true,
+   "title": "Observability dashboards",
+   "icon": "dashboard",
+   "targetBlank": false
+  }
+ ]
+}

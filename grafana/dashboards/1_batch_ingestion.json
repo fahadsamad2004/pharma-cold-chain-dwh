@@ -1,0 +1,1467 @@
+{
+ "uid": "p1-batch",
+ "title": "1 - Batch Ingestion Monitor",
+ "description": "Batch ingestion: load duration, rows processed, success rate.",
+ "tags": [
+  "pharma-phase1",
+  "ingestion"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 2,
+ "refresh": "5s",
+ "time": {
+  "from": "now-7d",
+  "to": "now"
+ },
+ "style": "dark",
+ "editable": true,
+ "graphTooltip": 1,
+ "panels": [
+  {
+   "id": 1,
+   "type": "text",
+   "title": "",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 2
+   },
+   "options": {
+    "mode": "markdown",
+    "content": "**How to read:** tiles show the latest value with its trend; colours follow thresholds (green = healthy, orange = watch, red = act). Hover the (i) icon on a tile for its definition. Spec metrics: **Batch Load Duration** (end - start), **Rows Processed** (`len(df)`), **Batch Success Rate** (successful / attempted x 100). Use the *Source domain* filter and the time picker above."
+   },
+   "transparent": true
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Success rate",
+   "description": "(successful runs / total attempted runs) x 100",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, ROUND(100.0 * AVG((status = 'success')::int) OVER (ORDER BY started_at), 1) AS \"success %\" FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#F2495C",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 90
+       },
+       {
+        "color": "#73BF69",
+        "value": 99
+       }
+      ]
+     },
+     "unit": "percent"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Batches",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, COUNT(*) OVER (ORDER BY started_at) AS batches FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#5794F2",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Rows loaded",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, SUM(rows_loaded) OVER (ORDER BY started_at) AS rows FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       }
+      ]
+     },
+     "unit": "short"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Rows rejected",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, SUM(rows_rejected) OVER (ORDER BY started_at) AS rejected FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 1
+       },
+       {
+        "color": "#F2495C",
+        "value": 5
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Failed batches",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, SUM((status = 'failed')::int) OVER (ORDER BY started_at) AS failed FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#F2495C",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 7,
+   "type": "stat",
+   "title": "Avg load time",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 2,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, ROUND(AVG(duration_sec) OVER (ORDER BY started_at), 2) AS seconds FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "value",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 30
+       },
+       {
+        "color": "#F2495C",
+        "value": 120
+       }
+      ]
+     },
+     "unit": "s"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 8,
+   "type": "row",
+   "title": "Load performance",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 7,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 9,
+   "type": "bargauge",
+   "title": "Batch load duration per file (seconds)",
+   "description": "Which file takes longest to read, parse and insert.",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT regexp_replace(file_name, '\\.(csv|xlsx)$', '') AS file, duration_sec FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY started_at DESC LIMIT 12"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "valueMode": "color",
+    "showUnfilled": true,
+    "minVizHeight": 12,
+    "minVizWidth": 8,
+    "namePlacement": "top",
+    "sizing": "auto",
+    "text": {
+     "titleSize": 12,
+     "valueSize": 16
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 30
+       },
+       {
+        "color": "#F2495C",
+        "value": 120
+       }
+      ]
+     },
+     "min": 0,
+     "unit": "s"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 10,
+   "type": "barchart",
+   "title": "Rows processed per batch: loaded vs rejected",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT regexp_replace(file_name, '\\.(csv|xlsx)$', '') AS file, rows_loaded, rows_rejected FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY started_at DESC LIMIT 12"
+    }
+   ],
+   "options": {
+    "orientation": "horizontal",
+    "xField": "file",
+    "xTickLabelRotation": 0,
+    "showValue": "auto",
+    "stacking": "normal",
+    "groupWidth": 0.7,
+    "barWidth": 0.9,
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "fillOpacity": 85,
+      "gradientMode": "hue",
+      "lineWidth": 0
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "rows_loaded"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#73BF69"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "rows_rejected"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#F2495C"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 11,
+   "type": "row",
+   "title": "Reliability and data quality",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 12,
+   "type": "barchart",
+   "title": "Successful vs failed batches by domain (%)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 18,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT source_domain, COUNT(*) FILTER (WHERE status = 'success') AS successful, COUNT(*) FILTER (WHERE status = 'failed') AS failed FROM ops.batch_load_log WHERE $__timeFilter(started_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "orientation": "vertical",
+    "xField": "source_domain",
+    "xTickLabelRotation": 0,
+    "showValue": "auto",
+    "stacking": "percent",
+    "groupWidth": 0.7,
+    "barWidth": 0.9,
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "fillOpacity": 85,
+      "gradientMode": "hue",
+      "lineWidth": 0
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "successful"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#73BF69"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "failed"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#F2495C"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 13,
+   "type": "bargauge",
+   "title": "Top validation reject reasons (rows)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 18,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT left(reason, 60) AS reason, COUNT(*) AS rows FROM stg.rejected_rows GROUP BY 1 ORDER BY 2 DESC LIMIT 8"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "values": true,
+     "calcs": [],
+     "fields": ""
+    },
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "valueMode": "color",
+    "showUnfilled": true,
+    "minVizHeight": 12,
+    "minVizWidth": 8,
+    "namePlacement": "top",
+    "sizing": "auto",
+    "text": {
+     "titleSize": 12,
+     "valueSize": 16
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#FF9830",
+        "value": null
+       },
+       {
+        "color": "#F2495C",
+        "value": 100
+       }
+      ]
+     },
+     "min": 0
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 14,
+   "type": "table",
+   "title": "Domain scorecard",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 18,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT source_domain AS domain, COUNT(*) AS batches, ROUND(100.0 * AVG((status = 'success')::int), 1) AS success_pct, ROUND(AVG(duration_sec), 1) AS avg_sec, SUM(rows_loaded) AS rows FROM ops.batch_load_log WHERE $__timeFilter(started_at) GROUP BY 1 ORDER BY 1"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "success_pct"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "gradient"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "#F2495C",
+           "value": null
+          },
+          {
+           "color": "#FF9830",
+           "value": 90
+          },
+          {
+           "color": "#73BF69",
+           "value": 99
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "avg_sec"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "gradient"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "#73BF69",
+           "value": null
+          },
+          {
+           "color": "#FF9830",
+           "value": 30
+          },
+          {
+           "color": "#F2495C",
+           "value": 120
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 15,
+   "type": "row",
+   "title": "Trends",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 27,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 16,
+   "type": "timeseries",
+   "title": "Rows loaded per batch over time",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 28,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, rows_loaded AS \"rows loaded\", rows_rejected AS \"rows rejected\" FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 2,
+      "fillOpacity": 80,
+      "gradientMode": "opacity",
+      "lineInterpolation": "linear",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "rows loaded"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#73BF69"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "rows rejected"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#F2495C"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 17,
+   "type": "timeseries",
+   "title": "Load duration over time (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 28,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "time_series",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at AS time, duration_sec AS \"duration (s)\" FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY 1"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 2,
+      "fillOpacity": 30,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "showPoints": "auto",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     },
+     "unit": "s"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "duration (s)"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#5794F2"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 18,
+   "type": "row",
+   "title": "Details and insights",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "x": 0,
+    "y": 36,
+    "w": 24,
+    "h": 1
+   }
+  },
+  {
+   "id": 19,
+   "type": "table",
+   "title": "Recent batches",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 37,
+    "w": 16,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT started_at, file_name, source_domain AS domain, status, rows_read, rows_loaded, rows_rejected, duration_sec, left(error, 80) AS error FROM ops.batch_load_log WHERE $__timeFilter(started_at) AND ('$domain' = 'All' OR source_domain = '$domain') ORDER BY started_at DESC LIMIT 15"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "status"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "success": {
+            "color": "#73BF69",
+            "text": "success"
+           },
+           "failed": {
+            "color": "#F2495C",
+            "text": "failed"
+           },
+           "true": {
+            "color": "#73BF69",
+            "text": "true"
+           },
+           "false": {
+            "color": "#F2495C",
+            "text": "false"
+           },
+           "dag_task_failed": {
+            "color": "#F2495C",
+            "text": "dag_task_failed"
+           },
+           "Pass": {
+            "color": "#73BF69",
+            "text": "Pass"
+           },
+           "FAIL": {
+            "color": "#F2495C",
+            "text": "FAIL"
+           }
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 20,
+   "type": "table",
+   "title": "Insights",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 37,
+    "w": 8,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT 'Slowest load' AS insight, file_name || ' - ' || duration_sec || ' s' AS detail FROM (SELECT * FROM ops.batch_load_log WHERE $__timeFilter(started_at) ORDER BY duration_sec DESC NULLS LAST LIMIT 1) a\n              UNION ALL SELECT 'Largest load', file_name || ' - ' || rows_loaded || ' rows' FROM (SELECT * FROM ops.batch_load_log WHERE $__timeFilter(started_at) ORDER BY rows_loaded DESC NULLS LAST LIMIT 1) b\n              UNION ALL SELECT 'Most frequent reject', left(reason, 50) || ' (' || n || ')' FROM (SELECT reason, COUNT(*) n FROM stg.rejected_rows GROUP BY 1 ORDER BY 2 DESC LIMIT 1) c\n              UNION ALL SELECT 'Failed batches', COUNT(*) FILTER (WHERE status = 'failed') || ' of ' || COUNT(*) FROM ops.batch_load_log WHERE $__timeFilter(started_at)"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 21,
+   "type": "barchart",
+   "title": "ETL step duration: latest transform run (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 46,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT step, duration_sec FROM ops.etl_step_log WHERE dag_id = 'p1_transform' AND run_id = (SELECT run_id FROM ops.etl_step_log WHERE dag_id = 'p1_transform' ORDER BY started_at DESC LIMIT 1) ORDER BY started_at"
+    }
+   ],
+   "options": {
+    "orientation": "horizontal",
+    "xField": "step",
+    "xTickLabelRotation": 0,
+    "showValue": "auto",
+    "stacking": "none",
+    "groupWidth": 0.7,
+    "barWidth": 0.9,
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "fillOpacity": 85,
+      "gradientMode": "hue",
+      "lineWidth": 0
+     },
+     "unit": "s"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "duration_sec"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "#4ECDC4"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": 22,
+   "type": "table",
+   "title": "Data-quality checks: latest run",
+   "description": "",
+   "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "pharma-pg"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 46,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "pharma-pg"
+     },
+     "format": "table",
+     "rawQuery": true,
+     "editorMode": "code",
+     "rawSql": "SELECT check_name, expected, actual, CASE WHEN passed THEN 'Pass' ELSE 'FAIL' END AS result FROM ops.dq_check_log WHERE run_id = (SELECT run_id FROM ops.dq_check_log ORDER BY id DESC LIMIT 1)"
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "result"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "success": {
+            "color": "#73BF69",
+            "text": "success"
+           },
+           "failed": {
+            "color": "#F2495C",
+            "text": "failed"
+           },
+           "true": {
+            "color": "#73BF69",
+            "text": "true"
+           },
+           "false": {
+            "color": "#F2495C",
+            "text": "false"
+           },
+           "dag_task_failed": {
+            "color": "#F2495C",
+            "text": "dag_task_failed"
+           },
+           "Pass": {
+            "color": "#73BF69",
+            "text": "Pass"
+           },
+           "FAIL": {
+            "color": "#F2495C",
+            "text": "FAIL"
+           }
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "templating": {
+  "list": [
+   {
+    "name": "domain",
+    "label": "Source domain",
+    "type": "query",
+    "datasource": {
+     "type": "grafana-postgresql-datasource",
+     "uid": "pharma-pg"
+    },
+    "refresh": 1,
+    "sort": 1,
+    "query": "SELECT 'All' AS domain UNION ALL SELECT DISTINCT source_domain FROM ops.batch_load_log WHERE source_domain IS NOT NULL",
+    "definition": "SELECT 'All' AS domain UNION ALL SELECT DISTINCT source_domain FROM ops.batch_load_log",
+    "current": {
+     "text": "All",
+     "value": "All"
+    },
+    "options": [
+     {
+      "text": "All",
+      "value": "All",
+      "selected": true
+     }
+    ],
+    "includeAll": false,
+    "multi": false
+   }
+  ]
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [
+  {
+   "type": "dashboards",
+   "tags": [
+    "pharma-phase1"
+   ],
+   "asDropdown": false,
+   "includeVars": false,
+   "keepTime": true,
+   "title": "Observability dashboards",
+   "icon": "dashboard",
+   "targetBlank": false
+  }
+ ]
+}
