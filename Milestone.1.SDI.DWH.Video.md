@@ -1,3 +1,3 @@
 # Milestone.1.SDI.DWH.Video
 
-Demo video (max 5 min): **PASTE LINK HERE** (YouTube unlisted / Google Drive / file in this repo)
+Demo video: https://drive.google.com/file/d/1D9f1hR1y3Z_vlASXptPRG0-MMBksXtxJ/view?usp=sharing
