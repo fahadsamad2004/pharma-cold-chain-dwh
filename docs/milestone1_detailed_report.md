@@ -68,7 +68,6 @@ Totals: **17,437 rows** (refresh 1) and **15,824 rows** (refresh 2). Full method
 
 *Story the dashboard tells:* the 208 MB historical sales file dominates load time while the generated monthly files load in seconds; the rejected-rows tables show which rule fires and how often; a failed batch (e.g. wrong schema) is visible immediately and the file is quarantined in `data/rejected/`.
 
-_[Insert screenshot of dashboard 1 here]_
 
 ## 5. Streaming ingestion (dashboard 4)
 
@@ -83,7 +82,6 @@ Streaming is simulated with **micro-batches, one per second** (`include/streamin
 
 *Story:* throughput stays flat at the configured rate (pipeline stable), latency stays in the 1-2 s range driven by the simulated gateway delay, and the malformed counter shows the validation layer rejecting about 1-2% of the events without stopping the stream.
 
-_[Insert screenshot of dashboard 4 here]_
 
 ## 6. Storage and staging (dashboard 2)
 
@@ -99,7 +97,6 @@ _[Insert screenshot of dashboard 4 here]_
 
 *Story:* sales dominates storage; after refresh 1 and 2 the cumulative-rows line steps up (data is appended, not replaced); coverage shows the 2023-2025 range fully represented, with January 2026 and February 2026 added by the refreshes (January 2023 holds only a few rows in the source data).
 
-_[Insert screenshot of dashboard 2 here]_
 
 ## 7. Transformation and dimensional modelling
 
@@ -153,7 +150,6 @@ Variants: **raw** (over the star schema), **optimized** (over the pre-aggregated
 | Raw vs optimised vs partitioned | optimisation proof |
 | Queries per hour, latest failed queries | usage and error log |
 
-_[Insert screenshot of dashboard 3 here]_
 
 ## 9. Design workbook (Excel, Phase 1)
 
